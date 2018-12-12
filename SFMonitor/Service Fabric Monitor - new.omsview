@@ -1,0 +1,478 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "resourcegroup": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "subscriptionId": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "workspace": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "workspaceapiversion": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "[parameters('workspaceapiversion')]",
+            "name": "[parameters('workspace')]",
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "location": "[parameters('location')]",
+            "id": "[Concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourcegroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspace'))]",
+            "resources": [
+                {
+                    "apiVersion": "2015-11-01-preview",
+                    "name": "Service Fabric",
+                    "type": "views",
+                    "location": "[parameters('location')]",
+                    "id": "[Concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourcegroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspace'),'/views/Service Fabric')]",
+                    "dependson": [
+                        "[Concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourcegroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspace'))]"
+                    ],
+                    "properties": {
+                        "Id": "Service Fabric",
+                        "Name": "Service Fabric",
+                        "Author": null,
+                        "Source": "Local",
+                        "Version": 2,
+                        "Dashboard": [
+                            {
+                                "Id": "TwoTrendsAndListBuilderBlade",
+                                "Type": "Blade",
+                                "Version": 0,
+                                "Configuration": {
+                                    "General": {
+                                        "title": "Cluster Events",
+                                        "newGroup": false,
+                                        "icon": "",
+                                        "useIcon": false
+                                    },
+                                    "Trend1": {
+                                        "Legend": "Events",
+                                        "LegendColor": "#00188f",
+                                        "ChartQuery": "ServiceFabricOperationalEvent | sort by TimeGenerated desc// Oql: Type=ServiceFabricOperationalEvent",
+                                        "Calculation": {
+                                            "Operation": "Sum"
+                                        }
+                                    },
+                                    "Trend2": {
+                                        "Legend": "All ",
+                                        "LegendColor": "#0072c6",
+                                        "ChartQuery": "",
+                                        "Calculation": {
+                                            "Operation": "Sum"
+                                        }
+                                    },
+                                    "List": {
+                                        "Query": "ServiceFabricOperationalEvent  | summarize count() by Computer ",
+                                        "HideGraph": false,
+                                        "enableSparklines": false,
+                                        "ColumnsTitle": {
+                                            "Name": "Node",
+                                            "Value": "Count"
+                                        },
+                                        "Color": "#0072c6",
+                                        "thresholds": {
+                                            "isEnabled": false,
+                                            "values": [
+                                                {
+                                                    "name": "Normal",
+                                                    "threshold": "Default",
+                                                    "color": "#009e49",
+                                                    "isDefault": true
+                                                },
+                                                {
+                                                    "name": "Warning",
+                                                    "threshold": "60",
+                                                    "color": "#fcd116",
+                                                    "isDefault": false
+                                                },
+                                                {
+                                                    "name": "Error",
+                                                    "threshold": "90",
+                                                    "color": "#ba141a",
+                                                    "isDefault": false
+                                                }
+                                            ]
+                                        },
+                                        "NameDSVSeparator": "",
+                                        "NavigationQuery": "search {selected item} | sort by TimeGenerated desc",
+                                        "NavigationSelect": {
+                                            "NavigationQuery": "search {selected item} | sort by TimeGenerated desc"
+                                        }
+                                    },
+                                    "Blade": {
+                                        "NavigationSelect": {}
+                                    }
+                                }
+                            },
+                            {
+                                "Id": "TwoTrendsAndListBuilderBlade",
+                                "Type": "Blade",
+                                "Version": 0,
+                                "Configuration": {
+                                    "General": {
+                                        "title": "Container logs",
+                                        "newGroup": false,
+                                        "icon": "",
+                                        "useIcon": false
+                                    },
+                                    "Trend1": {
+                                        "Legend": "Stdout",
+                                        "LegendColor": "#00188f",
+                                        "ChartQuery": "let ['EmptyTable'] = view () {datatable(LogEntrySource:string,TimeGenerated:datetime) [] }; let tempTable = ContainerLog | where LogEntrySource == \"stdout\" | project LogEntrySource, TimeGenerated; let containerLogTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  containerLogTable | sort by TimeGenerated desc",
+                                        "Calculation": {
+                                            "Operation": "Sum"
+                                        }
+                                    },
+                                    "Trend2": {
+                                        "Legend": "Stderr",
+                                        "LegendColor": "#eb3c00",
+                                        "ChartQuery": "let ['EmptyTable'] = view () {datatable(LogEntrySource:string,TimeGenerated:datetime) [] }; let tempTable = ContainerLog | where LogEntrySource == \"stderr\" | project LogEntrySource, TimeGenerated; let containerLogTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  containerLogTable | sort by TimeGenerated desc",
+                                        "Calculation": {
+                                            "Operation": "Sum"
+                                        }
+                                    },
+                                    "List": {
+                                        "Query": "let ['EmptyTable'] = view () {datatable(Computer:string,Name:string) [] }; let tempTable = ContainerLog | project Computer, Name; let containerLogTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  containerLogTable | summarize AggregatedValue = count() by Computer, Name",
+                                        "HideGraph": false,
+                                        "enableSparklines": false,
+                                        "operation": "Summary",
+                                        "ColumnsTitle": {
+                                            "Name": "Node",
+                                            "Value": "Events"
+                                        },
+                                        "Color": "#0072c6",
+                                        "thresholds": {
+                                            "isEnabled": false,
+                                            "values": [
+                                                {
+                                                    "name": "Normal",
+                                                    "threshold": "Default",
+                                                    "color": "#009e49",
+                                                    "isDefault": true
+                                                },
+                                                {
+                                                    "name": "Warning",
+                                                    "threshold": "60",
+                                                    "color": "#fcd116",
+                                                    "isDefault": false
+                                                },
+                                                {
+                                                    "name": "Error",
+                                                    "threshold": "90",
+                                                    "color": "#ba141a",
+                                                    "isDefault": false
+                                                }
+                                            ]
+                                        },
+                                        "NameDSVSeparator": "",
+                                        "NavigationQuery": "search {selected item} | sort by TimeGenerated desc",
+                                        "NavigationSelect": {
+                                            "NavigationQuery": "search {selected item} | sort by TimeGenerated desc"
+                                        }
+                                    },
+                                    "Blade": {
+                                        "NavigationSelect": {}
+                                    }
+                                }
+                            },
+                            {
+                                "Id": "TwoTrendsAndListBuilderBlade",
+                                "Type": "Blade",
+                                "Version": 0,
+                                "Configuration": {
+                                    "General": {
+                                        "title": "Application Events",
+                                        "newGroup": false,
+                                        "icon": "",
+                                        "useIcon": false
+                                    },
+                                    "Trend1": {
+                                        "Legend": "Reliable Service Events",
+                                        "LegendColor": "#00188f",
+                                        "ChartQuery": "ServiceFabricReliableServiceEvent | sort by TimeGenerated desc// Oql: Type=ServiceFabricReliableServiceEvent",
+                                        "Calculation": {
+                                            "Operation": "Sum"
+                                        }
+                                    },
+                                    "Trend2": {
+                                        "Legend": "Reliable Actor Events",
+                                        "LegendColor": "#55d455",
+                                        "ChartQuery": "ServiceFabricReliableActorEvent | sort by TimeGenerated",
+                                        "Calculation": {
+                                            "Operation": "Sum"
+                                        }
+                                    },
+                                    "List": {
+                                        "Query": "ServiceFabricReliableServiceEvent | union ServiceFabricReliableActorEvent | summarize count() by ApplicationName",
+                                        "HideGraph": false,
+                                        "enableSparklines": false,
+                                        "operation": "Summary",
+                                        "ColumnsTitle": {
+                                            "Name": "Node",
+                                            "Value": "Count"
+                                        },
+                                        "Color": "#0072c6",
+                                        "thresholds": {
+                                            "isEnabled": false,
+                                            "values": [
+                                                {
+                                                    "name": "Normal",
+                                                    "threshold": "Default",
+                                                    "color": "#009e49",
+                                                    "isDefault": true
+                                                },
+                                                {
+                                                    "name": "Warning",
+                                                    "threshold": "60",
+                                                    "color": "#fcd116",
+                                                    "isDefault": false
+                                                },
+                                                {
+                                                    "name": "Error",
+                                                    "threshold": "90",
+                                                    "color": "#ba141a",
+                                                    "isDefault": false
+                                                }
+                                            ]
+                                        },
+                                        "NameDSVSeparator": "",
+                                        "NavigationQuery": "search {selected item} | sort by TimeGenerated desc",
+                                        "NavigationSelect": {
+                                            "NavigationQuery": "search {selected item} | sort by TimeGenerated desc"
+                                        }
+                                    },
+                                    "Blade": {
+                                        "NavigationSelect": {}
+                                    }
+                                }
+                            },
+                            {
+                                "Id": "LineChartCalloutStackedBuilderBlade",
+                                "Type": "Blade",
+                                "Version": 0,
+                                "Configuration": {
+                                    "General": {
+                                        "title": "Node metrics",
+                                        "newGroup": false
+                                    },
+                                    "charts": [
+                                        {
+                                            "Header": {
+                                                "Title": "CPU (%)",
+                                                "Subtitle": ""
+                                            },
+                                            "LineChart": {
+                                                "Query": "Perf | where CounterName == \"% Processor Time\" and InstanceName == \"_Total\" | summarize AvgCPUPercent = avg(CounterValue) by Computer, bin(TimeGenerated, 5m) | render timechart",
+                                                "yAxis": {
+                                                    "isLogarithmic": false,
+                                                    "units": {
+                                                        "baseUnitType": "",
+                                                        "baseUnit": "",
+                                                        "displayUnit": ""
+                                                    },
+                                                    "customLabel": ""
+                                                },
+                                                "NavigationSelect": {}
+                                            }
+                                        },
+                                        {
+                                            "Header": {
+                                                "Title": "Memory (%)",
+                                                "Subtitle": ""
+                                            },
+                                            "LineChart": {
+                                                "Query": "Perf | where ObjectName == \"Memory\" and (CounterName == \"% Used Memory\" or CounterName == \"% Committed Bytes In Use\") | summarize AvgUsedMemory = avg(CounterValue) by Computer, bin(TimeGenerated, 5m) | render timechart // Oql: Type=Perf ObjectName=Memory (CounterName=\"% Used Memory\" OR CounterName=\"% Committed Bytes In Use\") |Measure Avg(CounterValue) as AvgUsedMemory by Computer interval 5minute",
+                                                "yAxis": {
+                                                    "isLogarithmic": false,
+                                                    "units": {
+                                                        "baseUnitType": "",
+                                                        "baseUnit": "",
+                                                        "displayUnit": ""
+                                                    },
+                                                    "customLabel": ""
+                                                },
+                                                "NavigationSelect": {}
+                                            }
+                                        },
+                                        {
+                                            "Header": {
+                                                "Title": "Disk usage (MB)",
+                                                "Subtitle": ""
+                                            },
+                                            "LineChart": {
+                                                "Query": "Perf | where CounterName == \"Free Megabytes\" and (InstanceName == \"/\" or InstanceName == \"_Total\") | summarize FreeDiskSpace = max(CounterValue) by Computer, bin(TimeGenerated, 5m) | render timechart// Oql: Type=Perf (CounterName=\"Free Megabytes\") (InstanceName=\"/\" OR InstanceName=\"_Total\") | Measure Max(CounterValue) as FreeDiskSpace by Computer interval 5minute",
+                                                "yAxis": {
+                                                    "isLogarithmic": false,
+                                                    "units": {
+                                                        "baseUnitType": "",
+                                                        "baseUnit": "",
+                                                        "displayUnit": ""
+                                                    },
+                                                    "customLabel": ""
+                                                },
+                                                "NavigationSelect": {}
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Id": "LineChartCalloutStackedBuilderBlade",
+                                "Type": "Blade",
+                                "Version": 0,
+                                "Configuration": {
+                                    "General": {
+                                        "title": "Container metrics",
+                                        "newGroup": false
+                                    },
+                                    "charts": [
+                                        {
+                                            "Header": {
+                                                "Title": "CPU (%)",
+                                                "Subtitle": ""
+                                            },
+                                            "LineChart": {
+                                                "Query": "let ['EmptyTable'] = view () {datatable(ObjectName:string,TimeGenerated:datetime,InstanceName:string,CounterName:string,CounterValue:double) [] }; let tempTable = Perf | where ObjectName == \"Container\" and CounterName == \"% Processor Time\" | project ObjectName, TimeGenerated, InstanceName, CounterName, CounterValue; let ContainerPerfTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  ContainerPerfTable | summarize AvgCPUPercent = avg(CounterValue) by InstanceName, bin(TimeGenerated, 5m) | render timechart",
+                                                "yAxis": {
+                                                    "isLogarithmic": false,
+                                                    "units": {
+                                                        "baseUnitType": "",
+                                                        "baseUnit": "",
+                                                        "displayUnit": ""
+                                                    },
+                                                    "customLabel": ""
+                                                },
+                                                "NavigationSelect": {}
+                                            }
+                                        },
+                                        {
+                                            "Header": {
+                                                "Title": "Memory (%)",
+                                                "Subtitle": ""
+                                            },
+                                            "LineChart": {
+                                                "Query": "let ['EmptyTable'] = view () {datatable(ObjectName:string,TimeGenerated:datetime,InstanceName:string,CounterName:string,CounterValue:double) [] }; let tempTable = Perf | where ObjectName == \"Container\" and CounterName == \"Memory Usage MB\" | project ObjectName, TimeGenerated, InstanceName, CounterName, CounterValue; let ContainerPerfTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  ContainerPerfTable | summarize AvgCPUPercent = avg(CounterValue) by InstanceName, bin(TimeGenerated, 5m) | render timechart",
+                                                "yAxis": {
+                                                    "isLogarithmic": false,
+                                                    "units": {
+                                                        "baseUnitType": "",
+                                                        "baseUnit": "",
+                                                        "displayUnit": ""
+                                                    },
+                                                    "customLabel": ""
+                                                },
+                                                "NavigationSelect": {}
+                                            }
+                                        },
+                                        {
+                                            "Header": {
+                                                "Title": "Disk Write (MB)",
+                                                "Subtitle": ""
+                                            },
+                                            "LineChart": {
+                                                "Query": "let ['EmptyTable'] = view () {datatable(ObjectName:string,TimeGenerated:datetime,InstanceName:string,CounterName:string,CounterValue:double) [] }; let tempTable = Perf | where ObjectName == \"Container\" and CounterName == \"Disk Writes MB\" | project ObjectName, TimeGenerated, InstanceName, CounterName, CounterValue; let ContainerPerfTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  ContainerPerfTable | summarize AvgCPUPercent = avg(CounterValue) by InstanceName, bin(TimeGenerated, 5m) | render timechart",
+                                                "yAxis": {
+                                                    "isLogarithmic": false,
+                                                    "units": {
+                                                        "baseUnitType": "",
+                                                        "baseUnit": "",
+                                                        "displayUnit": ""
+                                                    },
+                                                    "customLabel": ""
+                                                },
+                                                "NavigationSelect": {}
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Id": "NotableQueriesBuilderBlade",
+                                "Type": "Blade",
+                                "Version": 0,
+                                "Configuration": {
+                                    "General": {
+                                        "title": "Sample queries",
+                                        "newGroup": false,
+                                        "preselectedFilters": "Type, Computer",
+                                        "renderMode": "grid"
+                                    },
+                                    "queries": [
+                                        {
+                                            "query": "ServiceFabricOperationalEvent  | where EventId == 23083 and EventMessage contains \"UnexpectedTermination=true\"  | summarize NumCrashes = count() by ServiceName",
+                                            "displayName": "List of crashes by service"
+                                        },
+                                        {
+                                            "query": "ServiceFabricOperationalEvent  | where EventId == 23082 and EventMessage contains \"UnexpectedTermination=true\"  | summarize NumCrashes = count() by ServiceName",
+                                            "displayName": "List of crashes by container"
+                                        },
+                                        {
+                                            "query": "ContainerInventory | sort by TimeGenerated desc | project Computer, Name, Image, ImageTag, ContainerState, CreatedTime, StartedTime, FinishedTime | render table// Oql: Type=ContainerInventory   |select  Computer, Name, Image, ImageTag, ContainerState, CreatedTime, StartedTime, FinishedTime | Display Table",
+                                            "displayName": "List all container lifecycle events"
+                                        },
+                                        {
+                                            "query": "ContainerImageInventory | sort by TimeGenerated desc | project Computer, Image, ImageTag, ImageSize, Running | render table// Oql: Type=ContainerImageInventory | select Computer, Image, ImageTag, ImageSize, Running | Display Table",
+                                            "displayName": "List of container images on each node"
+                                        },
+                                        {
+                                            "query": "ContainerServiceLog | where TimeGenerated > ago(24h) | sort by TimeGenerated desc// Oql: Type=ContainerServiceLog TimeGenerated > NOW-24HOURS",
+                                            "displayName": "Container service logs in the past 24 hours."
+                                        },
+                                        {
+                                            "query": "ServiceFabricReliableActorEvent | where TaskName == \"ActorMethodThrewException\" | summarize AggregatedValue = count() by ActorId// Oql: Type=ServiceFabricReliableActorEvent AND TaskName=ActorMethodThrewException | measure count() by ActorId",
+                                            "displayName": "List of actor exceptions thrown"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "Filters": [],
+                        "OverviewTile": {
+                            "Id": "TwoTrendsBuilderTile",
+                            "Type": "OverviewTile",
+                            "Version": 2,
+                            "Configuration": {
+                                "Trend1": {
+                                    "Legend": "Service Fabric Events",
+                                    "LegendColor": "#00188f",
+                                    "ChartQuery": "ServiceFabricOperationalEvent | sort by TimeGenerated desc// Oql: Type=ServiceFabricOperationalEvent",
+                                    "Calculation": {
+                                        "Operation": "Sum"
+                                    }
+                                },
+                                "Trend2": {
+                                    "Legend": "Container Events",
+                                    "LegendColor": "#0072c6",
+                                    "ChartQuery": "let ['EmptyTable'] = view () {datatable(TimeGenerated:datetime) [] }; let tempTable = ContainerLog | project TimeGenerated; let containerLogTable = union kind = inner isfuzzy = true tempTable, (EmptyTable);  containerLogTable | sort by TimeGenerated desc",
+                                    "Calculation": {
+                                        "Operation": "Sum"
+                                    }
+                                },
+                                "Advanced": {
+                                    "DataFlowVerification": {
+                                        "Enabled": false,
+                                        "Query": "search * | sort by TimeGenerated desc",
+                                        "Message": ""
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
